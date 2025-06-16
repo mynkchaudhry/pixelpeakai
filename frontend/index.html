@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelPeak - Advanced BCI Avatar Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #scene {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Enhanced UI Panels */
+        .ui-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .ui-panel:hover {
+            border-color: rgba(76, 175, 80, 0.6);
+            box-shadow: 0 20px 40px rgba(76, 175, 80, 0.2);
+        }
+
+        .top-panel {
+            top: 20px;
+            left: 20px;
+            width: 380px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(30, 30, 30, 0.9));
+        }
+
+        .bottom-panel {
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 20, 0.9));
+        }
+
+        .right-panel {
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(25, 25, 25, 0.9));
+        }
+
+        .diagnostics-panel {
+            top: 20px;
+            left: 420px;
+            width: 300px;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(0, 50, 0, 0.9), rgba(0, 30, 0, 0.9));
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #4fc3f7;
+            text-shadow: 0 2px 10px rgba(79, 195, 247, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #81c784;
+            text-shadow: 0 2px 8px rgba(129, 199, 132, 0.4);
+        }
+
+        .status-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 12px;
+            border-left: 4px solid #4fc3f7;
+            transition: all 0.3s ease;
+        }
+
+        .status-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: #b0bec5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .status-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced emotion colors */
+        .emotion-calm { 
+            color: #81c784; 
+            text-shadow: 0 0 20px rgba(129, 199, 132, 0.6);
+        }
+        .emotion-excited { 
+            color: #ffb74d; 
+            text-shadow: 0 0 20px rgba(255, 183, 77, 0.6);
+        }
+        .emotion-sad { 
+            color: #f06292; 
+            text-shadow: 0 0 20px rgba(240, 98, 146, 0.6);
+        }
+        .emotion-anxious { 
+            color: #ff8a65; 
+            text-shadow: 0 0 20px rgba(255, 138, 101, 0.6);
+        }
+        .emotion-neutral { 
+            color: #90a4ae; 
+            text-shadow: 0 0 20px rgba(144, 164, 174, 0.6);
+        }
+
+        /* Enhanced direction colors */
+        .direction-forward { 
+            color: #42a5f5; 
+            text-shadow: 0 0 20px rgba(66, 165, 245, 0.6);
+        }
+        .direction-left { 
+            color: #ab47bc; 
+            text-shadow: 0 0 20px rgba(171, 71, 188, 0.6);
+        }
+        .direction-right { 
+            color: #66bb6a; 
+            text-shadow: 0 0 20px rgba(102, 187, 106, 0.6);
+        }
+        .direction-stop { 
+            color: #ef5350; 
+            text-shadow: 0 0 20px rgba(239, 83, 80, 0.6);
+        }
+        .direction-up { 
+            color: #ffa726; 
+            text-shadow: 0 0 20px rgba(255, 167, 38, 0.6);
+        }
+        .direction-down { 
+            color: #26c6da; 
+            text-shadow: 0 0 20px rgba(38, 198, 218, 0.6);
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin-top: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4fc3f7, #81c784, #4fc3f7);
+            background-size: 200% 100%;
+            animation: shimmer 2s ease-in-out infinite;
+            transition: width 0.5s ease;
+            border-radius: 5px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #7c8ced, #8654c7);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: #555;
+        }
+
+        .scenario-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .scenario-item {
+            padding: 15px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            position: relative;
+        }
+
+        .scenario-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-left-color: #4fc3f7;
+            transform: translateX(5px);
+        }
+
+        .scenario-item.active {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.2));
+            border-left-color: #81c784;
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .scenario-emotion {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .scenario-speech {
+            font-size: 15px;
+            margin-top: 8px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .speech-text {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #81c784;
+            position: relative;
+        }
+
+        .speech-text::before {
+            content: '💬';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #81c784;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .wave-animation {
+            display: inline-block;
+            animation: wave 2s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4fc3f7;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Brain wave visualization */
+        .brainwave-viz {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #4fc3f7, #81c784, #4fc3f7);
+            transform: translateY(-50%);
+            animation: brainwave 3s ease-in-out infinite;
+        }
+
+        @keyframes brainwave {
+            0%, 100% { 
+                transform: translateY(-50%) scaleY(1);
+                opacity: 0.7;
+            }
+            50% { 
+                transform: translateY(-50%) scaleY(3);
+                opacity: 1;
+            }
+        }
+
+        /* API status indicators */
+        .api-status {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .api-indicator {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .api-online {
+            background: rgba(76, 175, 80, 0.3);
+            color: #81c784;
+        }
+
+        .api-offline {
+            background: rgba(239, 83, 80, 0.3);
+            color: #ef5350;
+        }
+
+        /* Real-time metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #b0bec5;
+            text-transform: uppercase;
+        }
+
+        /* Environment indicator */
+        .environment-indicator {
+            position: absolute;
+            top: 250px;
+            left: 420px;
+            width: 200px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .weather-widget {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        /* Enhanced scrollbar */
+        .right-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .right-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .right-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4fc3f7, #81c784);
+            border-radius: 4px;
+        }
+
+        .right-panel::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #66d9ef, #a5d6a7);
+        }
+
+        /* Avatar visibility fixes */
+        canvas {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #scene-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+    </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="container">
+        <!-- 3D Scene Container -->
+        <div id="scene-container"></div>
+        
+        <!-- Top Left Panel - Brain Analysis -->
+        <div class="ui-panel top-panel">
+            <h1>🧠 PixelPeak Neural Interface</h1>
+            
+            <div class="status-item">
+                <div class="status-label">Neural Activity</div>
+                <div class="brainwave-viz">
+                    <div class="wave-line"></div>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <div class="status-label">Detected Emotion</div>
+                <div class="status-value" id="current-emotion">Calibrating...</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="emotion-confidence" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="status-item">
+                <div class="status-label">Movement Intent</div>
+                <div class="status-value" id="current-direction">Analyzing...</div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="direction-confidence" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="status-item">
+                <div class="status-label">Avatar Status</div>
+                <div class="status-value" id="avatar-status">🔄 Initializing Neural Link...</div>
+            </div>
+
+            <div class="speech-text" id="current-speech" style="display: none;">
+                <div class="status-label">Patient Communication</div>
+                <div id="speech-content">Ready to receive thoughts...</div>
+            </div>
+
+            <div class="api-status">
+                <div class="api-indicator api-online" id="groq-status">Groq ✅</div>
+                <div class="api-indicator api-online" id="eleven-status">ElevenLabs ✅</div>
+                <div class="api-indicator api-online" id="pinecone-status">Pinecone ✅</div>
+            </div>
+        </div>
+
+        <!-- Diagnostics Panel -->
+        <div class="ui-panel diagnostics-panel">
+            <h2>🔬 System Diagnostics</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value" id="response-time">0ms</div>
+                    <div class="metric-label">Response Time</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="accuracy-score">0%</div>
+                    <div class="metric-label">Accuracy</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="patterns-stored">0</div>
+                    <div class="metric-label">Patterns Stored</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="session-time">00:00</div>
+                    <div class="metric-label">Session Time</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Indicator -->
+        <div class="environment-indicator">
+            <div class="weather-widget">
+                <span id="environment-emoji">🌅</span>
+                <div>
+                    <div id="environment-name">Therapy Garden</div>
+                    <div style="font-size: 12px; color: #b0bec5;">Peaceful Environment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Scenarios -->
+        <div class="ui-panel right-panel">
+            <h2>📋 Neural Pattern Library</h2>
+            <div class="scenario-list" id="scenario-list">
+                <div class="loading"></div> Loading neural patterns...
+            </div>
+        </div>
+
+        <!-- Bottom Panel - Controls -->
+        <div class="ui-panel bottom-panel">
+            <div class="controls">
+                <button id="generate-btn">🧬 Generate New Pattern</button>
+                <button id="speak-btn" disabled>🗣️ Vocalize Thought</button>
+                <button id="auto-demo-btn">▶️ Auto Therapy</button>
+                <button id="create-avatar-btn">👤 Create Avatar</button>
+                <button id="find-similar-btn" disabled>🔍 Find Similar</button>
+                <button id="stop-audio-btn" disabled>⏹️ Stop Audio</button>
+            </div>
+            
+            <div>
+                <div class="status-label">Therapy Mode</div>
+                <div class="status-value" id="demo-status">Manual Control</div>
+                <div style="font-size: 12px; color: #b0bec5; margin-top: 5px;">
+                    Patient: <span id="patient-id">Anonymous</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced global variables
+        let scene, camera, renderer, avatar, environmentObjects = {};
+        let currentScenario = null;
+        let isAutoDemo = false;
+        let autoInterval = null;
+        let sessionStartTime = Date.now();
+        let apiResponseTimes = [];
+        let patternsStored = 0;
+
+        // API Base URL
+        const API_BASE = 'http://localhost:8000';
+
+        // Enhanced EEG scenarios with real-world context
+        const enhancedScenarios = [
+            {
+                id: 1,
+                emotion: "calm",
+                direction: "forward",
+                emotionConfidence: 0.87,
+                directionConfidence: 0.92,
+                speech: "I feel peaceful and ready to move forward in my recovery",
+                context: "Patient in meditation garden, morning therapy session",
+                environment: "garden",
+                medicalNotes: "Positive response to nature-based VR therapy"
+            },
+            {
+                id: 2,
+                emotion: "excited",
+                direction: "left",
+                emotionConfidence: 0.94,
+                directionConfidence: 0.78,
+                speech: "I'm energized! Let's explore the art gallery to my left",
+                context: "Patient engaged with visual stimuli, high motivation",
+                environment: "gallery",
+                medicalNotes: "Improved cognitive engagement through visual arts"
+            },
+            {
+                id: 3,
+                emotion: "sad",
+                direction: "stop",
+                emotionConfidence: 0.76,
+                directionConfidence: 0.85,
+                speech: "I'm feeling overwhelmed. Can we pause here by the fountain?",
+                context: "Emotional processing moment, needs therapeutic support",
+                environment: "plaza",
+                medicalNotes: "Recognizing and communicating emotional needs - progress"
+            },
+            {
+                id: 4,
+                emotion: "calm",
+                direction: "right",
+                emotionConfidence: 0.82,
+                directionConfidence: 0.89,
+                speech: "Let me turn toward the library, I want to learn something new",
+                context: "Cognitive engagement, seeking intellectual stimulation",
+                environment: "library",
+                medicalNotes: "Strong motivation for learning activities"
+            },
+            {
+                id: 5,
+                emotion: "anxious",
+                direction: "backward",
+                emotionConfidence: 0.79,
+                directionConfidence: 0.73,
+                speech: "I'm feeling anxious about this space. Can we go back to somewhere familiar?",
+                context: "Patient experiencing therapy anxiety, needs comfort zone",
+                environment: "home",
+                medicalNotes: "Anxiety management through familiar environments"
+            },
+            {
+                id: 6,
+                emotion: "excited",
+                direction: "up",
+                emotionConfidence: 0.91,
+                directionConfidence: 0.84,
+                speech: "I'm inspired! Look up at those beautiful birds flying overhead",
+                context: "Positive emotional response to nature elements",
+                environment: "sky",
+                medicalNotes: "Nature-based therapy showing excellent results"
+            }
+        ];
+
+        // Environment configurations
+        const environments = {
+            garden: { emoji: "🌸", name: "Therapy Garden", color: 0x90EE90 },
+            gallery: { emoji: "🖼️", name: "Art Gallery", color: 0xF5F5DC },
+            plaza: { emoji: "⛲", name: "Peaceful Plaza", color: 0x87CEEB },
+            library: { emoji: "📚", name: "Knowledge Library", color: 0xDDA0DD },
+            home: { emoji: "🏠", name: "Comfort Space", color: 0xFFE4B5 },
+            sky: { emoji: "🌅", name: "Open Sky", color: 0x87CEEB }
+        };
+
+        // Initialize Three.js scene with FIXED avatar visibility
+        function initScene() {
+            console.log('🎮 Initializing 3D Scene...');
+            
+            const sceneContainer = document.getElementById('scene-container');
+            
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+            
+            // Create camera with proper settings
+            camera = new THREE.PerspectiveCamera(
+                75, // Field of view
+                window.innerWidth / window.innerHeight, // Aspect ratio
+                0.1, // Near clipping plane
+                1000 // Far clipping plane
+            );
+            camera.position.set(0, 2, 5); // Position camera to see avatar
+            camera.lookAt(0, 1, 0); // Look at avatar position
+            
+            // Create renderer with proper settings
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: false
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            
+            // Append renderer to scene container
+            sceneContainer.appendChild(renderer.domElement);
+            
+            console.log('✅ Renderer created and added to DOM');
+            
+            // Add lighting
+            createLighting();
+            
+            // Create environment
+            createEnvironment();
+            
+            // Create avatar
+            createDetailedAvatar();
+            
+            // Start render loop
+            animate();
+            
+            updateAvatarStatus("✅ Neural Interface Connected");
+            console.log('🎉 3D Scene initialization complete!');
+        }
+
+        function createLighting() {
+            // Ambient light for overall illumination
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // Main directional light (sun)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.1;
+            directionalLight.shadow.camera.far = 50;
+            directionalLight.shadow.camera.left = -10;
+            directionalLight.shadow.camera.right = 10;
+            directionalLight.shadow.camera.top = 10;
+            directionalLight.shadow.camera.bottom = -10;
+            scene.add(directionalLight);
+
+            // Fill light
+            const fillLight = new THREE.DirectionalLight(0x87CEEB, 0.3);
+            fillLight.position.set(-5, 5, -5);
+            scene.add(fillLight);
+
+            console.log('💡 Lighting setup complete');
+        }
+
+        function createEnvironment() {
+            // Ground plane
+            const groundGeometry = new THREE.PlaneGeometry(20, 20);
+            const groundMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x90EE90,
+                transparent: true,
+                opacity: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = 0;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Simple backdrop
+            const backdropGeometry = new THREE.PlaneGeometry(15, 8);
+            const backdropMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x87CEEB,
+                transparent: true,
+                opacity: 0.5
+            });
+            const backdrop = new THREE.Mesh(backdropGeometry, backdropMaterial);
+            backdrop.position.set(0, 4, -8);
+            scene.add(backdrop);
+
+            console.log('🌍 Environment created');
+        }
+
+        function createDetailedAvatar() {
+            console.log('👤 Creating detailed avatar...');
+            
+            // Create avatar group
+            const avatarGroup = new THREE.Group();
+
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.4, 32, 16);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0xffdbac,
+                transparent: false
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 1.8;
+            head.castShadow = true;
+            avatarGroup.add(head);
+
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.06, 16, 8);
+            const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x2196F3 });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 1.85, 0.25);
+            avatarGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.15, 1.85, 0.25);
+            avatarGroup.add(rightEye);
+
+            // Mouth
+            const mouthGeometry = new THREE.SphereGeometry(0.05, 16, 8);
+            const mouthMaterial = new THREE.MeshLambertMaterial({ color: 0xff6b9d });
+            const mouth = new THREE.Mesh(mouthGeometry, mouthMaterial);
+            mouth.position.set(0, 1.65, 0.32);
+            mouth.scale.set(2, 0.5, 0.5);
+            avatarGroup.add(mouth);
+
+            // Body
+            const bodyGeometry = new THREE.CylinderGeometry(0.4, 0.5, 1.2, 16);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x4169e1 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.0;
+            body.castShadow = true;
+            avatarGroup.add(body);
+
+            // Arms
+            const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 12);
+            const armMaterial = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(-0.6, 1.2, 0);
+            leftArm.rotation.z = Math.PI / 6;
+            leftArm.castShadow = true;
+            avatarGroup.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(0.6, 1.2, 0);
+            rightArm.rotation.z = -Math.PI / 6;
+            rightArm.castShadow = true;
+            avatarGroup.add(rightArm);
+
+            // Hands
+            const handGeometry = new THREE.SphereGeometry(0.12, 12, 8);
+            const handMaterial = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+            
+            const leftHand = new THREE.Mesh(handGeometry, handMaterial);
+            leftHand.position.set(-0.8, 0.7, 0);
+            leftHand.castShadow = true;
+            avatarGroup.add(leftHand);
+            
+            const rightHand = new THREE.Mesh(handGeometry, handMaterial);
+            rightHand.position.set(0.8, 0.7, 0);
+            rightHand.castShadow = true;
+            avatarGroup.add(rightHand);
+
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.9, 12);
+            const legMaterial = new THREE.MeshLambertMaterial({ color: 0x2c5aa0 });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(-0.2, 0.45, 0);
+            leftLeg.castShadow = true;
+            avatarGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(0.2, 0.45, 0);
+            rightLeg.castShadow = true;
+            avatarGroup.add(rightLeg);
+
+            // Feet
+            const footGeometry = new THREE.BoxGeometry(0.3, 0.1, 0.5);
+            const footMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+            
+            const leftFoot = new THREE.Mesh(footGeometry, footMaterial);
+            leftFoot.position.set(-0.2, 0.05, 0.1);
+            leftFoot.castShadow = true;
+            avatarGroup.add(leftFoot);
+            
+            const rightFoot = new THREE.Mesh(footGeometry, footMaterial);
+            rightFoot.position.set(0.2, 0.05, 0.1);
+            rightFoot.castShadow = true;
+            avatarGroup.add(rightFoot);
+
+            // Store references for animation
+            avatarGroup.userData = {
+                head: head,
+                leftEye: leftEye,
+                rightEye: rightEye,
+                mouth: mouth,
+                leftArm: leftArm,
+                rightArm: rightArm,
+                body: body,
+                leftHand: leftHand,
+                rightHand: rightHand
+            };
+
+            // Position avatar in scene
+            avatarGroup.position.set(0, 0, 0);
+            
+            // Add to scene
+            scene.add(avatarGroup);
+            avatar = avatarGroup;
+            
+            console.log('✅ Detailed avatar created and added to scene');
+            console.log('Avatar position:', avatar.position);
+            console.log('Avatar children count:', avatar.children.length);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Avatar animations
+            if (avatar) {
+                // Breathing animation
+                const time = Date.now() * 0.002;
+                const breathe = Math.sin(time) * 0.02;
+                avatar.userData.body.scale.y = 1 + breathe;
+                avatar.position.y = breathe * 2;
+                
+                // Head movement based on emotion
+                if (currentScenario) {
+                    const headBob = Math.sin(time * 0.5) * 0.05;
+                    avatar.userData.head.rotation.y = headBob;
+                    
+                    // Emotion-based expressions
+                    switch(currentScenario.emotion) {
+                        case 'excited':
+                            avatar.userData.head.position.y = 1.8 + Math.sin(time * 2) * 0.02;
+                            avatar.userData.leftHand.rotation.z = Math.sin(time * 3) * 0.2;
+                            avatar.userData.rightHand.rotation.z = Math.sin(time * 3) * 0.2;
+                            break;
+                        case 'sad':
+                            avatar.userData.head.rotation.x = -0.1;
+                            avatar.userData.head.position.y = 1.75;
+                            break;
+                        case 'calm':
+                            avatar.userData.head.rotation.x = 0;
+                            avatar.userData.head.position.y = 1.8;
+                            break;
+                        case 'anxious':
+                            avatar.userData.leftHand.position.x = -0.8 + Math.sin(time * 8) * 0.02;
+                            avatar.userData.rightHand.position.x = 0.8 + Math.sin(time * 8) * 0.02;
+                            break;
+                    }
+                }
+                
+                // Arm movements
+                const armSway = Math.sin(time * 0.7) * 0.1;
+                avatar.userData.leftArm.rotation.z = Math.PI / 6 + armSway;
+                avatar.userData.rightArm.rotation.z = -Math.PI / 6 - armSway;
+            }
+            
+            // Update environment based on current scenario
+            updateEnvironmentLighting();
+            
+            // Render the scene
+            renderer.render(scene, camera);
+        }
+
+        function updateEnvironmentLighting() {
+            if (currentScenario && environments[currentScenario.environment]) {
+                const env = environments[currentScenario.environment];
+                scene.background = new THREE.Color(env.color);
+            }
+        }
+
+        // Enhanced UI Functions with real API calls
+        async function updateCurrentScenario(scenario) {
+            const startTime = Date.now();
+            currentScenario = scenario;
+            
+            console.log('📊 Updating scenario:', scenario);
+            
+            // Update emotion display
+            const emotionElement = document.getElementById('current-emotion');
+            emotionElement.textContent = scenario.emotion.charAt(0).toUpperCase() + scenario.emotion.slice(1);
+            emotionElement.className = `status-value emotion-${scenario.emotion}`;
+            
+            // Update direction display
+            const directionElement = document.getElementById('current-direction');
+            directionElement.textContent = scenario.direction.charAt(0).toUpperCase() + scenario.direction.slice(1);
+            directionElement.className = `status-value direction-${scenario.direction}`;
+            
+            // Update confidence bars with animation
+            animateConfidenceBar('emotion-confidence', scenario.emotionConfidence * 100);
+            animateConfidenceBar('direction-confidence', scenario.directionConfidence * 100);
+            
+            // Update speech text
+            const speechElement = document.getElementById('current-speech');
+            const speechContent = document.getElementById('speech-content');
+            speechContent.textContent = scenario.speech;
+            speechElement.style.display = 'block';
+            
+            // Update environment
+            if (scenario.environment && environments[scenario.environment]) {
+                const env = environments[scenario.environment];
+                document.getElementById('environment-emoji').textContent = env.emoji;
+                document.getElementById('environment-name').textContent = env.name;
+            }
+            
+            // Enable speak button
+            document.getElementById('speak-btn').disabled = false;
+            document.getElementById('find-similar-btn').disabled = false;
+            
+            // Update scenario list highlighting
+            updateScenarioList();
+            
+            // Track response time
+            const responseTime = Date.now() - startTime;
+            updateMetrics(responseTime);
+        }
+
+        function animateConfidenceBar(elementId, targetWidth) {
+            const element = document.getElementById(elementId);
+            let currentWidth = 0;
+            const step = targetWidth / 20;
+            
+            const animate = () => {
+                if (currentWidth < targetWidth) {
+                    currentWidth += step;
+                    element.style.width = `${Math.min(currentWidth, targetWidth)}%`;
+                    requestAnimationFrame(animate);
+                }
+            };
+            animate();
+        }
+
+        function updateScenarioList() {
+            const scenarioList = document.getElementById('scenario-list');
+            scenarioList.innerHTML = '';
+            
+            enhancedScenarios.forEach(scenario => {
+                const item = document.createElement('div');
+                item.className = `scenario-item ${currentScenario && currentScenario.id === scenario.id ? 'active' : ''}`;
+                item.onclick = () => updateCurrentScenario(scenario);
+                
+                item.innerHTML = `
+                    <div class="scenario-emotion emotion-${scenario.emotion}">
+                        ${scenario.emotion} + ${scenario.direction} 
+                        <span style="float: right;">${environments[scenario.environment]?.emoji || '🏥'}</span>
+                    </div>
+                    <div class="scenario-speech">"${scenario.speech}"</div>
+                    <div style="font-size: 11px; color: #b0bec5; margin-top: 5px;">
+                        ${scenario.medicalNotes}
+                    </div>
+                `;
+                
+                scenarioList.appendChild(item);
+            });
+        }
+
+        function updateMetrics(responseTime) {
+            // Update response time
+            document.getElementById('response-time').textContent = `${responseTime}ms`;
+            
+            // Update accuracy (simulate based on confidence)
+            if (currentScenario) {
+                const accuracy = Math.round((currentScenario.emotionConfidence + currentScenario.directionConfidence) / 2 * 100);
+                document.getElementById('accuracy-score').textContent = `${accuracy}%`;
+            }
+            
+            // Update patterns stored
+            document.getElementById('patterns-stored').textContent = patternsStored;
+            
+            // Update session time
+            const sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const minutes = Math.floor(sessionTime / 60);
+            const seconds = sessionTime % 60;
+            document.getElementById('session-time').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateAvatarStatus(status) {
+            document.getElementById('avatar-status').textContent = status;
+        }
+
+        // Enhanced API integration functions
+        async function generateNewScenario() {
+            updateAvatarStatus("🧬 Generating Neural Pattern...");
+            document.getElementById('generate-btn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-scenario`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        context: "VR therapy session with environmental interaction"
+                    })
+                });
+                
+                if (response.ok) {
+                    const scenario = await response.json();
+                    console.log('Generated scenario:', scenario);
+                    
+                    // Map API response to our format
+                    const enhancedScenario = {
+                        id: scenario.id || `scenario_${Date.now()}`,
+                        emotion: scenario.emotion || "calm",
+                        direction: scenario.direction || "forward",
+                        emotionConfidence: scenario.emotion_confidence || 0.8,
+                        directionConfidence: scenario.direction_confidence || 0.8,
+                        speech: scenario.speech || "I want to communicate",
+                        context: scenario.context || "Generated scenario",
+                        environment: determineEnvironment(scenario.emotion, scenario.direction),
+                        medicalNotes: scenario.medical_notes || `Generated via Groq LLM - ${scenario.emotion}/${scenario.direction} pattern`
+                    };
+                    
+                    await updateCurrentScenario(enhancedScenario);
+                    updateAvatarStatus("✅ Neural Pattern Generated");
+                    patternsStored++;
+                } else {
+                    const errorText = await response.text();
+                    console.error('Scenario generation failed:', response.status, errorText);
+                    throw new Error(`API Error: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error generating scenario:', error);
+                // Fallback to local scenario
+                const randomScenario = enhancedScenarios[Math.floor(Math.random() * enhancedScenarios.length)];
+                await updateCurrentScenario(randomScenario);
+                updateAvatarStatus("✅ Using Cached Pattern");
+            }
+            
+            document.getElementById('generate-btn').disabled = false;
+        }
+
+        async function simulateSpeaking() {
+            if (!currentScenario) return;
+            
+            updateAvatarStatus("🗣️ Converting Thoughts to Speech...");
+            document.getElementById('speak-btn').disabled = true;
+            document.getElementById('stop-audio-btn').disabled = false;
+            
+            try {
+                // Use the simplified endpoint with proper data format
+                const response = await fetch(`${API_BASE}/api/process-speech-simple`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        scenario_id: currentScenario.id || "unknown",
+                        text: currentScenario.speech || "I want to communicate",
+                        emotion: currentScenario.emotion || "calm"
+                    })
+                });
+                
+                if (response.ok) {
+                    const speechResult = await response.json();
+                    console.log('Speech result:', speechResult);
+                    
+                    if (speechResult.success) {
+                        // Play the generated audio
+                        try {
+                            const audio = new Audio(`${API_BASE}${speechResult.audio_url}`);
+                            
+                            // Enhanced speaking animation
+                            const speechContent = document.getElementById('speech-content');
+                            speechContent.innerHTML = `<span class="wave-animation">${currentScenario.speech}</span>`;
+                            
+                            // Animate avatar mouth during speech
+                            animateAvatarSpeaking(speechResult.duration_estimate * 1000 || 3000);
+                            
+                            audio.play().catch(console.error);
+                            
+                            audio.onended = () => {
+                                updateAvatarStatus("✅ Speech Complete");
+                                document.getElementById('speak-btn').disabled = false;
+                                document.getElementById('stop-audio-btn').disabled = true;
+                                speechContent.textContent = currentScenario.speech;
+                                stopAvatarSpeaking();
+                            };
+                            
+                            updateAvatarStatus("🎵 Playing Neural Speech");
+                        } catch (audioError) {
+                            console.error('Audio playback error:', audioError);
+                            simulateTextToSpeech();
+                        }
+                    } else {
+                        console.log('TTS not available, using text simulation');
+                        console.log('Error:', speechResult.error);
+                        simulateTextToSpeech();
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error('Speech API error:', response.status, errorText);
+                    simulateTextToSpeech();
+                }
+            } catch (error) {
+                console.error('Error processing speech:', error);
+                simulateTextToSpeech();
+            }
+        }
+
+        function simulateTextToSpeech() {
+            const speechContent = document.getElementById('speech-content');
+            speechContent.innerHTML = `<span class="wave-animation">${currentScenario.speech}</span>`;
+            
+            animateAvatarSpeaking(3000);
+            
+            setTimeout(() => {
+                updateAvatarStatus("✅ Speech Complete (Simulated)");
+                document.getElementById('speak-btn').disabled = false;
+                document.getElementById('stop-audio-btn').disabled = true;
+                speechContent.textContent = currentScenario.speech;
+                stopAvatarSpeaking();
+            }, 3000);
+        }
+
+        function animateAvatarSpeaking(duration) {
+            if (!avatar || !avatar.userData.mouth) return;
+            
+            const mouth = avatar.userData.mouth;
+            const originalScale = mouth.scale.clone();
+            
+            const speakingAnimation = () => {
+                const scale = 1 + Math.sin(Date.now() * 0.02) * 0.3;
+                mouth.scale.set(originalScale.x * scale, originalScale.y, originalScale.z);
+            };
+            
+            avatar.userData.speakingInterval = setInterval(speakingAnimation, 50);
+            
+            setTimeout(() => {
+                stopAvatarSpeaking();
+            }, duration);
+        }
+
+        function stopAvatarSpeaking() {
+            if (avatar && avatar.userData.speakingInterval) {
+                clearInterval(avatar.userData.speakingInterval);
+                if (avatar.userData.mouth) {
+                    avatar.userData.mouth.scale.set(2, 0.5, 0.5);
+                }
+            }
+        }
+
+        async function findSimilarPatterns() {
+            if (!currentScenario) return;
+            
+            updateAvatarStatus("🔍 Searching Neural Database...");
+            document.getElementById('find-similar-btn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/similar-patterns`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        emotion: currentScenario.emotion,
+                        direction: currentScenario.direction,
+                        context: currentScenario.context || "",
+                        top_k: 3,
+                        min_score: 0.7
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.similar_patterns.length > 0) {
+                        displaySimilarPatterns(result.similar_patterns);
+                        updateAvatarStatus(`✅ Found ${result.similar_patterns.length} Similar Patterns`);
+                    } else {
+                        updateAvatarStatus("ℹ️ No Similar Patterns Found");
+                    }
+                } else {
+                    throw new Error('Similar patterns API error');
+                }
+            } catch (error) {
+                console.error('Error finding similar patterns:', error);
+                updateAvatarStatus("⚠️ Pattern Search Failed");
+            }
+            
+            document.getElementById('find-similar-btn').disabled = false;
+        }
+
+        function displaySimilarPatterns(patterns) {
+            const scenarioList = document.getElementById('scenario-list');
+            
+            const similarSection = document.createElement('div');
+            similarSection.innerHTML = `
+                <h3 style="color: #4fc3f7; margin: 15px 0 10px 0; font-size: 16px;">
+                    🔍 Similar Neural Patterns
+                </h3>
+            `;
+            
+            patterns.forEach(pattern => {
+                const item = document.createElement('div');
+                item.className = 'scenario-item';
+                item.style.borderLeft = '4px solid #4fc3f7';
+                item.innerHTML = `
+                    <div class="scenario-emotion emotion-${pattern.emotion}">
+                        ${pattern.emotion} + ${pattern.direction}
+                        <span style="float: right;">Match: ${Math.round(pattern.similarity_score * 100)}%</span>
+                    </div>
+                    <div class="scenario-speech">"${pattern.context}"</div>
+                    <div style="font-size: 11px; color: #4fc3f7; margin-top: 5px;">
+                        Confidence: E${Math.round(pattern.emotion_confidence * 100)}% / D${Math.round(pattern.direction_confidence * 100)}%
+                    </div>
+                `;
+                similarSection.appendChild(item);
+            });
+            
+            scenarioList.insertBefore(similarSection, scenarioList.firstChild);
+            
+            setTimeout(() => {
+                if (similarSection.parentNode) {
+                    similarSection.remove();
+                }
+            }, 10000);
+        }
+
+        async function createAvatar() {
+            updateAvatarStatus("👤 Creating New Avatar...");
+            document.getElementById('create-avatar-btn').disabled = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/avatars/create-preset`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        avatar_type: "therapy_assistant",
+                        customizations: {
+                            expression: currentScenario?.emotion || "calm",
+                            environment: currentScenario?.environment || "garden"
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    const avatarResult = await response.json();
+                    
+                    if (avatarResult.success) {
+                        updateAvatarStatus("✅ Avatar Created Successfully");
+                        console.log('New avatar created:', avatarResult.avatar_id);
+                    } else {
+                        throw new Error('Avatar creation failed');
+                    }
+                } else {
+                    throw new Error('Avatar API error');
+                }
+            } catch (error) {
+                console.error('Error creating avatar:', error);
+                updateAvatarStatus("⚠️ Avatar Creation Failed");
+            }
+            
+            document.getElementById('create-avatar-btn').disabled = false;
+        }
+
+        function determineEnvironment(emotion, direction) {
+            const environmentMap = {
+                'calm': ['garden', 'library', 'home'],
+                'excited': ['gallery', 'plaza', 'sky'],
+                'sad': ['home', 'garden', 'plaza'],
+                'anxious': ['home', 'garden'],
+                'neutral': ['library', 'plaza']
+            };
+            
+            const possibleEnvirons = environmentMap[emotion] || ['garden'];
+            return possibleEnvirons[Math.floor(Math.random() * possibleEnvirons.length)];
+        }
+
+        function toggleAutoDemo() {
+            const btn = document.getElementById('auto-demo-btn');
+            const status = document.getElementById('demo-status');
+            
+            if (!isAutoDemo) {
+                isAutoDemo = true;
+                btn.textContent = "⏸️ Pause Therapy";
+                status.textContent = "Auto Therapy Running";
+                
+                autoInterval = setInterval(async () => {
+                    await generateNewScenario();
+                    setTimeout(async () => {
+                        if (isAutoDemo) {
+                            await simulateSpeaking();
+                            setTimeout(async () => {
+                                if (isAutoDemo) await findSimilarPatterns();
+                            }, 2000);
+                        }
+                    }, 2000);
+                }, 12000);
+                
+                generateNewScenario();
+            } else {
+                isAutoDemo = false;
+                btn.textContent = "▶️ Auto Therapy";
+                status.textContent = "Manual Control";
+                clearInterval(autoInterval);
+            }
+        }
+
+        function updateSessionTimer() {
+            setInterval(() => {
+                updateMetrics(0);
+            }, 1000);
+        }
+
+        async function monitorAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    const health = await response.json();
+                    
+                    document.getElementById('groq-status').className = 
+                        `api-indicator ${health.services.groq === '✅' ? 'api-online' : 'api-offline'}`;
+                    document.getElementById('eleven-status').className = 
+                        `api-indicator ${health.services.elevenlabs === '✅' ? 'api-online' : 'api-offline'}`;
+                    document.getElementById('pinecone-status').className = 
+                        `api-indicator ${health.services.pinecone === '✅' ? 'api-online' : 'api-offline'}`;
+                }
+            } catch (error) {
+                document.querySelectorAll('.api-indicator').forEach(indicator => {
+                    indicator.className = 'api-indicator api-offline';
+                });
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('generate-btn').onclick = generateNewScenario;
+        document.getElementById('speak-btn').onclick = simulateSpeaking;
+        document.getElementById('auto-demo-btn').onclick = toggleAutoDemo;
+        document.getElementById('create-avatar-btn').onclick = createAvatar;
+        document.getElementById('find-similar-btn').onclick = findSimilarPatterns;
+        document.getElementById('stop-audio-btn').onclick = () => {
+            updateAvatarStatus("⏹️ Speech Stopped");
+            document.getElementById('speak-btn').disabled = false;
+            document.getElementById('stop-audio-btn').disabled = true;
+            stopAvatarSpeaking();
+        };
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize everything when page loads
+        window.addEventListener('load', () => {
+            console.log('🚀 PixelPeak Loading...');
+            
+            // Check Three.js availability
+            if (typeof THREE === 'undefined') {
+                console.error('❌ Three.js not loaded!');
+                updateAvatarStatus("❌ 3D Graphics Not Available");
+                return;
+            }
+            
+            console.log('✅ Three.js loaded:', THREE.REVISION);
+            
+            // Initialize 3D scene
+            initScene();
+            
+            // Initialize UI
+            updateScenarioList();
+            updateSessionTimer();
+            
+            // Set initial patient ID
+            document.getElementById('patient-id').textContent = `P${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+            
+            // Load first scenario
+            setTimeout(() => {
+                updateCurrentScenario(enhancedScenarios[0]);
+            }, 1000);
+            
+            // Monitor API status
+            monitorAPIStatus();
+            setInterval(monitorAPIStatus, 30000);
+            
+            console.log('🎉 PixelPeak initialization complete!');
+        });
+
+        // Enhanced console information
+        console.log(`
+🚀 PixelPeak Enhanced Frontend with Working Avatar!
+
+🎯 Features:
+- ✅ Visible 3D Avatar with detailed animations
+- ✅ Real-time API integration
+- ✅ Professional therapy interface
+- ✅ Enhanced error handling
+- ✅ Emotion-based avatar expressions
+
+🔗 API Endpoints:
+- Generate: ${API_BASE}/api/generate-scenario
+- Speech: ${API_BASE}/api/process-speech-simple
+- Similar: ${API_BASE}/api/similar-patterns
+- Avatar: ${API_BASE}/api/avatars/create-preset
+
+🎮 Avatar Features:
+- Breathing animation
+- Emotion-based expressions
+- Mouth movement during speech
+- Hand gestures for different emotions
+- Real-time environment adaptation
+
+Ready for neural interface therapy! 🧠✨
+        `);
+    </script>
+</body>
+</html>
