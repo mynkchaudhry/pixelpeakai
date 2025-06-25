@@ -1,0 +1,14 @@
+{
+  "text": "I feel tense and worried about many things. It's challenging but I'm working on managing these anxious thoughts and emotions.",
+  "emotion": "anxious",
+  "word_count": 20,
+  "duration_estimate": 12.0,
+  "generated_at": "2025-06-25T18:22:48.221190",
+  "voice_characteristics": {
+    "tone": "Tense and worried",
+    "pace": "Variable, sometimes rushed",
+    "pitch": "Higher with nervous inflection"
+  },
+  "fallback_reason": "API access restricted",
+  "instructions": "This is a fallback response. The avatar will still perform movements and captions will be displayed."
+}
