@@ -1,0 +1,14 @@
+{
+  "text": "Welcome to the enhanced PixelPeak system. I feel peaceful and ready to explore these new movement capabilities together with you.",
+  "emotion": "calm",
+  "word_count": 20,
+  "duration_estimate": 12.0,
+  "generated_at": "2025-06-25T18:22:39.992844",
+  "voice_characteristics": {
+    "tone": "Peaceful and soothing",
+    "pace": "Slow and measured",
+    "pitch": "Lower and steady"
+  },
+  "fallback_reason": "API access restricted",
+  "instructions": "This is a fallback response. The avatar will still perform movements and captions will be displayed."
+}
