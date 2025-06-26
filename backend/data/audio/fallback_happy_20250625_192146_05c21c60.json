@@ -1,0 +1,14 @@
+{
+  "text": "What a wonderful feeling of pure joy! I'm excited about all the possibilities ahead and feeling incredibly positive right now.",
+  "emotion": "happy",
+  "word_count": 20,
+  "duration_estimate": 12.0,
+  "generated_at": "2025-06-25T19:21:46.717419",
+  "voice_characteristics": {
+    "tone": "Bright and cheerful",
+    "pace": "Energetic and upbeat",
+    "pitch": "Higher and more expressive"
+  },
+  "fallback_reason": "API access restricted",
+  "instructions": "This is a fallback response. The avatar will still perform movements and captions will be displayed."
+}
