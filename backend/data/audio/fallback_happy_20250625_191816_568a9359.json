@@ -1,0 +1,14 @@
+{
+  "text": "This happiness fills my heart completely! I want to share this amazing energy with everyone around me today.",
+  "emotion": "happy",
+  "word_count": 18,
+  "duration_estimate": 10.799999999999999,
+  "generated_at": "2025-06-25T19:18:16.146684",
+  "voice_characteristics": {
+    "tone": "Bright and cheerful",
+    "pace": "Energetic and upbeat",
+    "pitch": "Higher and more expressive"
+  },
+  "fallback_reason": "API access restricted",
+  "instructions": "This is a fallback response. The avatar will still perform movements and captions will be displayed."
+}

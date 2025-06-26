@@ -12,7 +12,7 @@ class Config:
     # =============================================================================
     
     # Groq API Configuration
-    GROQ_API_KEY = "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"
+    GROQ_API_KEY = "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"
     GROQ_BASE_URL = "https://api.groq.com/openai/v1"
     GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
     GROQ_MAX_TOKENS = 500
